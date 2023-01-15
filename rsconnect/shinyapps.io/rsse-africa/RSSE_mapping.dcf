@@ -1,0 +1,13 @@
+name: RSSE_mapping
+title: RSSE_mapping
+username:
+account: rsse-africa
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8040435
+bundleId: 6735924
+url: https://rsse-africa.shinyapps.io/RSSE_mapping/
+when: 1673796096.07956
+lastSyncTime: 1673796096.07957
+asMultiple: FALSE
+asStatic: FALSE
