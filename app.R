@@ -40,7 +40,7 @@ readr::write_csv(mapping_w_coords, here("data", "mapping_w_coords.csv"))
 # SHINY APP UI ----
 
 ui <- fluidPage(
-  titlePanel(p("Research Software Initatives in Africa", style = "color:#3474A7")),
+  titlePanel("Research Software Initatives in Africa"),
   
   
   tabsetPanel(type = "tabs",
@@ -48,30 +48,40 @@ ui <- fluidPage(
               tabPanel("Table", DTOutput(outputId = "table")),
               tabPanel("About", 
                    HTML(r"(
-                        <p>This app was developed by Nomalungelo Maphanga and Anelda van der Walt from <a href=\"https://talarify.co.za\">Talarify</a> 
+                       <h2>ABOUT</h2>
+                       
+                       <p>This app was developed by <strong>Nomalungelo Maphanga</strong> and <strong>Anelda van der Walt</strong> from 
+                       <strong><a href=\"https://talarify.co.za\">Talarify</a></strong>
                         as part of a project to create more awareness about the breadth of interest and expertise in research software in Africa.
                        </p>
+                       
+                       <p>The additional mapping and development of the Shiny app was run as project in Cohort 6 of the Open Life 
+                       Science Mentoring and Training Programme <a href=\"https://openlifesci.org/\">(OLS)</a>. 
+                       </p>
+                       
+                       <h2> DATA </h2>
+                       
                        <p>Data included in this visualisation were sourced as follows:
                        <ul>
-                        <li> The Research Software Alliance <a href=\"https://www.researchsoft.org/\">(ReSA)</a> recruited 
+                        <li> The <strong>Research Software Alliance</strong> <a href=\"https://www.researchsoft.org/\">(ReSA)</a> recruited 
                         contracters to perform a mapping of research software initiatives in the Global South in 2021/2022;</li>
                         <li> Talarify built on the work by ReSA in 2022/2023 through web searches, outreach to their networks, 
-                              and outreach at the World Science Forum to collect more data.</li>
+                              and outreach at the World Science Forum to collect more data. The additional mapping is a work in progress and is currently available in 
+                       <a href=\"https://docs.google.com/spreadsheets/d/18FSidlJ4o1AOwz7lVoy2A8iWDxiADHMZ4sWMEIisYJA/edit#gid=0\">this Google Sheet</a>.
+                       </li>
                       </ul>
                      </p>
-                     <p>The additional mapping and development of the Shiny app was run as part of Cohort 6 of the Open Life 
-                     Science Mentoring and Training Programme <a href=\"https://openlifesci.org/\">(OLS)</a>.
-                     </p>
+
+                     
+                     <h2>MORE INFORMATION</h2>
                      
                      <p>For more information about the ReSA mapping, please <a href=\"https://www.researchsoft.org/blog/2022-10/\">read the 
-                     blog post</a> by Michelle Barker.
+                     blog post</a> by <strong>Michelle Barker</strong> and 
+                     <a href=\"https://zenodo.org/record/7179807#.Y8UaK9JByV4\">the report</a> by <strong>Paula Andrea Martinez</strong>.
                      </p>
                      
-                     <p>
-                     The additional mapping is a work in progress and is currently available in 
-                     <a href=\"https://docs.google.com/spreadsheets/d/18FSidlJ4o1AOwz7lVoy2A8iWDxiADHMZ4sWMEIisYJA/edit#gid=0\">this Google Sheet</a>.
-                     Please address any questions about this work to <a href=\"mailto:anelda@talarify.co.za\">Anelda van der Walt</a>. 
-                     The project was funded by Talarify.
+                     <p>Please address any questions about this work to <a href=\"mailto:anelda@talarify.co.za\">Anelda van der Walt</a>. 
+                     <em>The project was funded by <a href=\"https://talarify.co.za\">Talarify</a>.</em>
                      </p>
                      )"
                    )
@@ -90,7 +100,7 @@ server <- function(input, output){
   output$map <- renderLeaflet({
     
     rse_map <- leaflet(data = mapping_w_coords) %>%
-      setView(lat = 0, lng= 25, zoom = 3) %>%  # set map view
+      setView(0, 25, zoom = 2) %>% 
       addTiles() %>%                                       # Add default OpenStreetMap map background tiles
       addAwesomeMarkers(lng=~Longitude, lat=~Latitude,
                         popup=~paste("Type:", Type),
