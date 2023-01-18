@@ -2,7 +2,7 @@
 # LOAD PACKAGES ----
 
 library(pacman)
-pacman::p_load(readr, here, shiny, rgdal,
+pacman::p_load(shinythemes,readr, here, shiny, rgdal,
                leaflet, DT, dplyr, countrycode)
 
 
@@ -22,7 +22,8 @@ clean_mapping <- mapping %>%
   mutate(Mapping_location = case_when(Country == "Multiple countries" ~ "Zambia",
                                       TRUE ~ as.character(Country))) %>% 
   mutate(country_iso = countrycode(Mapping_location, origin = "country.name", destination = "iso3c")) %>% 
-  relocate(country_iso, .after = "Mapping_location")
+  relocate(country_iso, .after = "Mapping_location") %>% 
+  mutate(Type = as.factor(Type), Collector =as.factor(Collector), Region = as.factor(Region), Country = as.factor(Country), Data_origin = as.factor(Data_origin))
 
 
 # Add country coordinates
@@ -32,7 +33,8 @@ mapping_w_coords <- clean_mapping %>%
   select(-c(`Country.y`, `Alpha-2 code`, `Numeric code`)) %>% 
   rename(Country = Country.x, Latitude = `Latitude (average)`, Longitude = `Longitude (average)` )
 
-## SAVE DATA FOR RE-USE IN SHINY
+
+## SAVE DATA FOR RE-USE IN SHINY ----
 
 readr::write_csv(mapping_w_coords, here("data", "mapping_w_coords.csv"))
 
@@ -40,76 +42,118 @@ readr::write_csv(mapping_w_coords, here("data", "mapping_w_coords.csv"))
 # SHINY APP UI ----
 
 ui <- fluidPage(
+  theme = shinytheme("cerulean"),
+  
+  tags$style(type = "text/css", "html, body {width:100%; height:100%}"),
+  
   titlePanel("Research Software Initatives in Africa"),
   
-  
-  tabsetPanel(type = "tabs",
-              tabPanel("Map",  leafletOutput(outputId = "map")),
-              tabPanel("Table", DTOutput(outputId = "table")),
-              tabPanel("About", 
-                   HTML(r"(
-                       <h2>ABOUT</h2>
-                       
-                       <p>This app was developed by <strong>Nomalungelo Maphanga</strong> and <strong>Anelda van der Walt</strong> from 
-                       <strong><a href=\"https://talarify.co.za\">Talarify</a></strong>
-                        as part of a project to create more awareness about the breadth of interest and expertise in research software in Africa.
-                       </p>
-                       
-                       <p>The additional mapping and development of the Shiny app was run as project in Cohort 6 of the Open Life 
-                       Science Mentoring and Training Programme <a href=\"https://openlifesci.org/\">(OLS)</a>. 
-                       </p>
-                       
-                       <h2> DATA </h2>
-                       
-                       <p>Data included in this visualisation were sourced as follows:
-                       <ul>
-                        <li> The <strong>Research Software Alliance</strong> <a href=\"https://www.researchsoft.org/\">(ReSA)</a> recruited 
-                        contracters to perform a mapping of research software initiatives in the Global South in 2021/2022;</li>
-                        <li> Talarify built on the work by ReSA in 2022/2023 through web searches, outreach to their networks, 
-                              and outreach at the World Science Forum to collect more data. The additional mapping is a work in progress and is currently available in 
-                       <a href=\"https://docs.google.com/spreadsheets/d/18FSidlJ4o1AOwz7lVoy2A8iWDxiADHMZ4sWMEIisYJA/edit#gid=0\">this Google Sheet</a>.
-                       </li>
+  sidebarLayout(
+    sidebarPanel(
+      selectInput(inputId = "initiative_type",
+                  label = "Which types of initiatives would you like to view? (multiple selection possible)",
+                  choices = c("All", as.character(mapping_w_coords$Type)),
+                  multiple = TRUE,
+                  selected = "All")
+    ),
+                     
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Map", leafletOutput("map")),
+        tabPanel("Table", DTOutput(outputId = "table")),
+        tabPanel("About", 
+                 HTML(r"(
+                      <h2>ABOUT</h2>
+                      
+                      <p>This app was developed by <strong>Nomalungelo Maphanga</strong> and <strong>Anelda van der Walt</strong> from 
+                      <strong><a href=\"https://talarify.co.za\">Talarify</a></strong>
+                      as part of a project to create more awareness about the breadth of interest and expertise in research software in Africa.
+                      </p>
+                      
+                      <p>The additional mapping and development of the Shiny app was run as project in Cohort 6 of the Open Life 
+                      Science Mentoring and Training Programme <a href=\"https://openlifesci.org/\">(OLS)</a>. 
+                      </p>
+                      
+                      <h2> DATA </h2>
+                      
+                      <p>Data included in this visualisation were sourced as follows:
+                      <ul>
+                      <li> The <strong>Research Software Alliance</strong> <a href=\"https://www.researchsoft.org/\">(ReSA)</a> recruited 
+                      contracters to perform a mapping of research software initiatives in the Global South in 2021/2022;</li>
+                      <li> Talarify built on the work by ReSA in 2022/2023 through web searches, outreach to their networks, 
+                      and outreach at the World Science Forum to collect more data. The additional mapping is a work in progress and is currently available in 
+                      <a href=\"https://docs.google.com/spreadsheets/d/18FSidlJ4o1AOwz7lVoy2A8iWDxiADHMZ4sWMEIisYJA/edit#gid=0\">this Google Sheet</a>.
+                      </li>
                       </ul>
-                     </p>
-
-                     
-                     <h2>MORE INFORMATION</h2>
-                     
-                     <p>For more information about the ReSA mapping, please <a href=\"https://www.researchsoft.org/blog/2022-10/\">read the 
-                     blog post</a> by <strong>Michelle Barker</strong> and 
-                     <a href=\"https://zenodo.org/record/7179807#.Y8UaK9JByV4\">the report</a> by <strong>Paula Andrea Martinez</strong>.
-                     </p>
-                     
-                     <p>Please address any questions about this work to <a href=\"mailto:anelda@talarify.co.za\">Anelda van der Walt</a>. 
-                     <em>The project was funded by <a href=\"https://talarify.co.za\">Talarify</a>.</em>
-                     </p>
-                     )"
-                   )
-                   )
-              )
-              
-)
-
+                      </p>
+                      
+                      
+                      <h2>MORE INFORMATION</h2>
+                      
+                      <p>For more information about the ReSA mapping, please <a href=\"https://www.researchsoft.org/blog/2022-10/\">read the 
+                      blog post</a> by <strong>Michelle Barker</strong> and 
+                      <a href=\"https://zenodo.org/record/7179807#.Y8UaK9JByV4\">the report</a> by <strong>Paula Andrea Martinez</strong>.
+                      </p>
+                      
+                      <p>Please address any questions about this work to <a href=\"mailto:anelda@talarify.co.za\">Anelda van der Walt</a>. 
+                      <em>The project was funded by <a href=\"https://talarify.co.za\">Talarify</a>.</em>
+                      </p>
+                 )")
+        )
+        )
+    )
+  )
+)  
+      
+  
 # SHINY APP SERVER ----
 
-server <- function(input, output){
+server <- function(input, output, session){
   
-  output$table <- renderDT(mapping)
+  filter_map_data_react <- reactive({
+    mapping_w_coords %>% 
+      dplyr::filter(Type %in% input$initiative_type)    
+  })
+  
+  table_data_react <- reactive({
+    mapping %>% 
+      dplyr::filter(Type %in% input$initiative_type)    
+  })
   
   
   output$map <- renderLeaflet({
     
-    rse_map <- leaflet(data = mapping_w_coords) %>%
-      setView(0, 25, zoom = 2) %>% 
-      addTiles() %>%                                       # Add default OpenStreetMap map background tiles
-      addAwesomeMarkers(lng=~Longitude, lat=~Latitude,
-                        popup=~paste("Type:", Type),
-                        label=~paste0(Name, "(", Country, ")"),
-                        clusterOptions = markerClusterOptions()
-                        )
-  
-    rse_map
+    filter_map_data <- filter_map_data_react()
 
+    if ("All" %in% input$initiative_type){
+      leaflet(mapping_w_coords) %>% 
+        addTiles() %>%
+        setView(0, 25, zoom = 2) %>% 
+        addAwesomeMarkers(lng=~Longitude, lat=~Latitude,
+                          popup=~paste("Type:", Type),
+                          label=~paste0(Name, "(", Country, ")"),
+                          clusterOptions = markerClusterOptions())
+    }else{
+      leaflet(filter_map_data) %>% 
+        setView(0, 25, zoom = 2) %>% 
+        addTiles() %>%
+        addAwesomeMarkers(lng=~Longitude, lat=~Latitude,
+                          popup=~paste("Type:", Type),
+                          label=~paste0(Name, "(", Country, ")"),
+                          clusterOptions = markerClusterOptions())
+    }
+  })
+  
+  
+  output$table <- renderDT({
+  
+    table_data <- table_data_react()
+    
+    if ("All" %in% input$initiative_type){
+      mapping
+    } else{
+      table_data
+    }
   })
 }
 
