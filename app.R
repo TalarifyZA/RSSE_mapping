@@ -1,28 +1,56 @@
-#https://www.paulamoraga.com/book-geospatial/sec-shinyexample.html
 # LOAD PACKAGES ----
 
 library(pacman)
+
 pacman::p_load(shinythemes,readr, here, shiny, rgdal,
                leaflet, DT, dplyr, countrycode)
+
+# FUNCTION TO DISPLAY RMD AS TAB PAGE ----
+## function to render .Rmd files to html - does not embed image or add css
+## From https://github.com/vnijs/shiny-site
+
+encoding <- getOption("shiny.site.encoding", default = "UTF-8")
+
+
+inclRmd <- function(path, r_env = parent.frame()) {
+  paste(
+    readLines(path, warn = FALSE, encoding = encoding),
+    collapse = '\n'
+  ) %>%
+    knitr::knit2html(
+      text = .,
+      fragment.only = TRUE,
+      envir = r_env,
+      options = "",
+      stylesheet = "",
+      encoding = encoding
+    ) %>%
+    gsub("&lt;!--/html_preserve--&gt;","",.) %>%  ## knitr adds this
+    gsub("&lt;!--html_preserve--&gt;","",.) %>%   ## knitr adds this
+    HTML
+}
 
 
 # LOAD DATA ----
 
-# Read data from Google Sheets
+## The CSV of the mapping data is shared via Zenodo at https://doi.org/10.5281/zenodo.7594453
+## Read the downloaded CSV file
 
-mapping <- readr::read_csv(here("data", "rsse_africa_mapping_2022.csv"))
-# Load country coordinates
+mapping <- read_csv(here("data", "rsse_africa_mapping_2022.csv"))
 
-coords <- readr::read_csv("https://gist.githubusercontent.com/tadast/8827699/raw/f5cac3d42d16b78348610fc4ec301e9234f82821/countries_codes_and_coordinates.csv")
+# Augment data ----
 
-
-# Add country iso2 code for geolocation
+# Add country iso3 code for geolocation
 
 clean_mapping <- mapping %>%
+  ## Make all initiatives that are available in multiple countries map to Zambia as an arbitrary position
   mutate(Mapping_location = case_when(Country == "Multiple countries" ~ "Zambia",
                                       TRUE ~ as.character(Country))) %>% 
+  ## Use package {countrycode} to add a new column with iso3 code for each country
   mutate(country_iso = countrycode(Mapping_location, origin = "country.name", destination = "iso3c")) %>% 
+  ## Move columns to make table neat
   relocate(country_iso, .after = "Mapping_location") %>% 
+  ## Convert categorical data from character class to factor
   mutate(Type = as.factor(Type), Collector =as.factor(Collector), Region = as.factor(Region), Country = as.factor(Country), Data_origin = as.factor(Data_origin))
 
 
@@ -39,7 +67,10 @@ mapping_w_coords <- clean_mapping %>%
 readr::write_csv(mapping_w_coords, here("data", "mapping_w_coords.csv"))
 
 
+
+
 # SHINY APP UI ----
+
 
 ui <- fluidPage(
   theme = shinytheme("cerulean"),
@@ -59,46 +90,9 @@ ui <- fluidPage(
                      
     mainPanel(
       tabsetPanel(
-        tabPanel("Map", leafletOutput("map")),
+        tabPanel("Map", leafletOutput("map",width = "100%", height = 800)),
         tabPanel("Table", DTOutput(outputId = "table")),
-        tabPanel("About", 
-                 HTML(r"(
-                      <h2>ABOUT</h2>
-                      
-                      <p>This app was developed by <strong>Nomalungelo Maphanga</strong> and <strong>Anelda van der Walt</strong> from 
-                      <strong><a href=\"https://talarify.co.za\">Talarify</a></strong>
-                      as part of a project to create more awareness about the breadth of interest and expertise in research software in Africa.
-                      </p>
-                      
-                      <p>The additional mapping and development of the Shiny app was run as project in Cohort 6 of the Open Life 
-                      Science Mentoring and Training Programme <a href=\"https://openlifesci.org/\">(OLS)</a>. 
-                      </p>
-                      
-                      <h2> DATA </h2>
-                      
-                      <p>Data included in this visualisation were sourced as follows:
-                      <ul>
-                      <li> The <strong>Research Software Alliance</strong> <a href=\"https://www.researchsoft.org/\">(ReSA)</a> recruited 
-                      contracters to perform a mapping of research software initiatives in the Global South in 2021/2022;</li>
-                      <li> Talarify built on the work by ReSA in 2022/2023 through web searches, outreach to their networks, 
-                      and outreach at the World Science Forum to collect more data. The additional mapping is a work in progress and is currently available in 
-                      <a href=\"https://docs.google.com/spreadsheets/d/18FSidlJ4o1AOwz7lVoy2A8iWDxiADHMZ4sWMEIisYJA/edit#gid=0\">this Google Sheet</a>.
-                      </li>
-                      </ul>
-                      </p>
-                      
-                      
-                      <h2>MORE INFORMATION</h2>
-                      
-                      <p>For more information about the ReSA mapping, please <a href=\"https://www.researchsoft.org/blog/2022-10/\">read the 
-                      blog post</a> by <strong>Michelle Barker</strong> and 
-                      <a href=\"https://zenodo.org/record/7179807#.Y8UaK9JByV4\">the report</a> by <strong>Paula Andrea Martinez</strong>.
-                      </p>
-                      
-                      <p>Please address any questions about this work to <a href=\"mailto:anelda@talarify.co.za\">Anelda van der Walt</a>. 
-                      <em>The project was funded by <a href=\"https://talarify.co.za\">Talarify</a>.</em>
-                      </p>
-                 )")
+        tabPanel("About", uiOutput("about")
         )
         )
     )
@@ -128,14 +122,14 @@ server <- function(input, output, session){
     if ("All" %in% input$initiative_type){
       leaflet(mapping_w_coords) %>% 
         addTiles() %>%
-        setView(0, 25, zoom = 2) %>% 
+        setView(20,1, zoom = 4) %>% 
         addAwesomeMarkers(lng=~Longitude, lat=~Latitude,
                           popup=~paste("Type:", Type),
                           label=~paste0(Name, "(", Country, ")"),
                           clusterOptions = markerClusterOptions())
     }else{
       leaflet(filter_map_data) %>% 
-        setView(0, 25, zoom = 2) %>% 
+        setView(20,1, zoom = 4) %>% 
         addTiles() %>%
         addAwesomeMarkers(lng=~Longitude, lat=~Latitude,
                           popup=~paste("Type:", Type),
@@ -154,6 +148,10 @@ server <- function(input, output, session){
     } else{
       table_data
     }
+  })
+  
+  output$about <- renderUI({
+    inclRmd("./about.Rmd")
   })
 }
 

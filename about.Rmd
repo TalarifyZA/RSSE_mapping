@@ -1,0 +1,25 @@
+## ABOUT
+                      
+This app was developed by __Nomalungelo Maphanga__ and __Anelda van der Walt__ from __[Talarify](https://talarify.co.za)__
+as part of a project to create more awareness about the breadth of interest and expertise in research software in Africa.
+
+The additional mapping and development of the Shiny app was run as project in Cohort 6 of the Open Life 
+Science Mentoring and Training Programme [OLS](https://openlifesci.org/).
+
+## DATA
+
+Data included in this visualisation were sourced as follows:
+
+- The [__Research Software Alliance__](https://www.researchsoft.org/) (ReSA) recruited contracters to perform a mapping of research software initiatives in the Global South in 2021/2022;
+- Talarify built on the work by ReSA in 2022/2023 through web searches, outreach to their networks, and outreach at the World Science Forum to collect more data. The additional mapping is a work in progress and is currently available in [Zenodo at this DOI](https://doi.org/10.5281/zenodo.7594453).
+                      
+## MORE INFORMATION
+                      
+For more information about the ReSA mapping, please [read the blog post](https://www.researchsoft.org/blog/2022-10/) by
+__Michelle Barker__ and [the report](https://zenodo.org/record/7179807#.Y8UaK9JByV4) by __Paula Andrea Martinez__.
+                      
+The code for this Shiny app is available from [Zenodo and Github](https://doi.org/10.5281/zenodo.7594792).
+                      
+Please address any questions about this work to [Anelda van der Walt](mailto:anelda@talarify.co.za). 
+
+_The project was funded by [Talarify](https://talarify.co.za)._
